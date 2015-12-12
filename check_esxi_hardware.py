@@ -580,23 +580,7 @@ if os_platform != "win32":
 
 # connection to host
 verboseoutput("Connection to "+hosturl)
-# pywbem 0.7.0 handling is special, some patched 0.7.0 installations work differently
-pywbemversion = pkg_resources.get_distribution("pywbem").version
-verboseoutput("Found pywbem version "+pywbemversion)
-if '0.7.0' in pywbemversion:
-  try:
-    conntest = pywbem.WBEMConnection(hosturl, (user,password))
-    c = conntest.EnumerateInstances('CIM_Card')
-  except:
-    #raise
-    verboseoutput("Connection error, disable SSL certification verification (probably patched pywbem)")
-    wbemclient = pywbem.WBEMConnection(hosturl, (user,password), no_verification=True)
-  else:
-    verboseoutput("Connection worked")
-    wbemclient = pywbem.WBEMConnection(hosturl, (user,password))
-# pywbem 0.8.0 and later
-elif '0.8.0' in pywbemversion:
-  wbemclient = pywbem.WBEMConnection(hosturl, (user,password), NS, no_verification=True)
+wbemclient = pywbem.WBEMConnection(hosturl, (user,password), NS, no_verification=True)
 
 # Add a timeout for the script. When using with Nagios, the Nagios timeout cannot be < than plugin timeout.
 if on_windows == False and timeout > 0:
