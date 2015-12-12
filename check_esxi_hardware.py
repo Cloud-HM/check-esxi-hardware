@@ -446,7 +446,7 @@ def urlised_serialnumber(vendor,country,SerialNumber):
 
 def verboseoutput(message) :
   if verbose:
-    print "%s %s" % (time.strftime("%Y%m%d %H:%M:%S"), message)
+    print("%s %s" % (time.strftime("%Y%m%d %H:%M:%S"), message))
 
 # ----------------------------------------------------------------------
 
@@ -497,14 +497,14 @@ def getopts() :
 
   # check input arguments
   if len(sys.argv) < 2:
-    print "no parameters specified\n"
+    print("no parameters specified\n")
     parser.print_help()
     sys.exit(-1)
   # if first argument starts with 'https://' we have old-style parameters, so handle in old way
   if re.match("https://",sys.argv[1]):
     # check input arguments
     if len(sys.argv) < 5:
-      print "too few parameters\n"
+      print("too few parameters\n")
       parser.print_help()
       sys.exit(-1)
     if len(sys.argv) > 5 :
@@ -522,7 +522,7 @@ def getopts() :
     mandatories = ['host', 'user', 'password']
     for m in mandatories:
       if not options.__dict__[m]:
-        print "mandatory parameter '--" + m + "' is missing\n"
+        print("mandatory parameter '--" + m + "' is missing\n")
         parser.print_help()
         sys.exit(-1)
 
@@ -575,7 +575,7 @@ if os_platform != "win32":
   on_windows = False
   import signal
   def handler(signum, frame):
-    print 'UNKNOWN: Execution time too long!'
+    print('UNKNOWN: Execution time too long!')
     sys.exit(ExitUnknown)
 
 # connection to host
@@ -615,19 +615,19 @@ ExitMsg = ""
 if vendor=='auto':
   try:
     c=wbemclient.EnumerateInstances('CIM_Chassis')
-  except pywbem.cim_operations.CIMError,args:
+  except pywbem.cim_operations.CIMError as args:
     if ( args[1].find('Socket error') >= 0 ):
-      print "UNKNOWN: %s" %args
+      print("UNKNOWN: %s" %args)
       sys.exit (ExitUnknown)
     else:
       verboseoutput("Unknown CIM Error: %s" % args)
-  except pywbem.cim_http.AuthError,arg:
+  except pywbem.cim_http.AuthError as arg:
     verboseoutput("Global exit set to UNKNOWN")
     GlobalStatus = ExitUnknown
-    print "UNKNOWN: Authentication Error"
+    print("UNKNOWN: Authentication Error")
     sys.exit (GlobalStatus)
   else:
-    man=c[0][u'Manufacturer']
+    man=c[0]['Manufacturer']
     if re.match("Dell",man):
       vendor="dell"
     elif re.match("HP",man):
@@ -643,16 +643,16 @@ for classe in ClassesToCheck :
   verboseoutput("Check classe "+classe)
   try:
     instance_list = wbemclient.EnumerateInstances(classe)
-  except pywbem.cim_operations.CIMError,args:
+  except pywbem.cim_operations.CIMError as args:
     if ( args[1].find('Socket error') >= 0 ):
-      print "UNKNOWN: %s" %args
+      print("UNKNOWN: %s" %args)
       sys.exit (ExitUnknown)
     else:
       verboseoutput("Unknown CIM Error: %s" % args)
-  except pywbem.cim_http.AuthError,arg:
+  except pywbem.cim_http.AuthError as arg:
     verboseoutput("Global exit set to UNKNOWN")
     GlobalStatus = ExitUnknown
-    print "UNKNOWN: Authentication Error"
+    print("UNKNOWN: Authentication Error")
     sys.exit (GlobalStatus)
   else:
     # GlobalStatus = ExitOK #ARR
@@ -671,29 +671,29 @@ for classe in ClassesToCheck :
 
       # BIOS & Server info
       if elementName == 'System BIOS' :
-        bios_info =     instance[u'Name'] + ': ' \
-            + instance[u'VersionString'] + ' ' \
-            + str(instance[u'ReleaseDate'].datetime.date())
-        verboseoutput("    VersionString = "+instance[u'VersionString'])
+        bios_info =     instance['Name'] + ': ' \
+            + instance['VersionString'] + ' ' \
+            + str(instance['ReleaseDate'].datetime.date())
+        verboseoutput("    VersionString = "+instance['VersionString'])
 
       elif elementName == 'Chassis' :
-        man = instance[u'Manufacturer']
+        man = instance['Manufacturer']
         if man is None :
           man = 'Unknown Manufacturer'
         verboseoutput("    Manufacturer = "+man)
-        SerialNumber = instance[u'SerialNumber']
-        SerialChassis = instance[u'SerialNumber']
+        SerialNumber = instance['SerialNumber']
+        SerialChassis = instance['SerialNumber']
         if SerialNumber:
           verboseoutput("    SerialNumber = "+SerialNumber)
         server_info = man + ' '
         if vendor != 'intel':
-          model = instance[u'Model']
+          model = instance['Model']
           if model:
             verboseoutput("    Model = "+model)
             server_info +=  model + ' s/n:'
 
       elif elementName == 'Server Blade' :
-        SerialNumber = instance[u'SerialNumber']
+        SerialNumber = instance['SerialNumber']
         if SerialNumber:
           verboseoutput("    SerialNumber = "+SerialNumber)
           isblade = "yes"
@@ -701,34 +701,34 @@ for classe in ClassesToCheck :
       # Report detail of Numeric Sensors and generate nagios perfdata
 
       if classe == "CIM_NumericSensor" :
-        sensorType = instance[u'sensorType']
+        sensorType = instance['sensorType']
         sensStr = sensor_Type.get(sensorType,"Unknown")
         if sensorType:
           verboseoutput("    sensorType = %d - %s" % (sensorType,sensStr))
-        units = instance[u'BaseUnits']
+        units = instance['BaseUnits']
         if units:
           verboseoutput("    BaseUnits = %d" % units)
         # grab some of these values for Nagios performance data
-        scale = 10**instance[u'UnitModifier']
+        scale = 10**instance['UnitModifier']
         verboseoutput("    Scaled by = %f " % scale)
-        cr = int(instance[u'CurrentReading'])*scale
+        cr = int(instance['CurrentReading'])*scale
         verboseoutput("    Current Reading = %f" % cr)
         elementNameValue = "%s: %g" % (elementName,cr)
         ltnc = 0
         utnc = 0
         ltc  = 0
         utc  = 0
-        if instance[u'LowerThresholdNonCritical'] is not None:
-          ltnc = instance[u'LowerThresholdNonCritical']*scale
+        if instance['LowerThresholdNonCritical'] is not None:
+          ltnc = instance['LowerThresholdNonCritical']*scale
           verboseoutput("    Lower Threshold Non Critical = %f" % ltnc)
-        if instance[u'UpperThresholdNonCritical'] is not None:
-          utnc = instance[u'UpperThresholdNonCritical']*scale
+        if instance['UpperThresholdNonCritical'] is not None:
+          utnc = instance['UpperThresholdNonCritical']*scale
           verboseoutput("    Upper Threshold Non Critical = %f" % utnc)
-        if instance[u'LowerThresholdCritical'] is not None:
-          ltc = instance[u'LowerThresholdCritical']*scale
+        if instance['LowerThresholdCritical'] is not None:
+          ltc = instance['LowerThresholdCritical']*scale
           verboseoutput("    Lower Threshold Critical = %f" % ltc)
-        if instance[u'UpperThresholdCritical'] is not None:
-          utc = instance[u'UpperThresholdCritical']*scale
+        if instance['UpperThresholdCritical'] is not None:
+          utc = instance['UpperThresholdCritical']*scale
           verboseoutput("    Upper Threshold Critical = %f" % utc)
         #
         if perfdata:
@@ -880,13 +880,13 @@ if perf == '|':
   perf = ''
 
 if GlobalStatus == ExitOK :
-  print "OK - Server: %s %s %s%s" % (server_info, SerialNumber, bios_info, perf)
+  print("OK - Server: %s %s %s%s" % (server_info, SerialNumber, bios_info, perf))
 
 elif GlobalStatus == ExitUnknown :
-  print "UNKNOWN: %s" % (ExitMsg) #ARR
+  print("UNKNOWN: %s" % (ExitMsg)) #ARR
 
 else:
-  print "%s- Server: %s %s %s%s" % (ExitMsg, server_info, SerialNumber, bios_info, perf)
+  print("%s- Server: %s %s %s%s" % (ExitMsg, server_info, SerialNumber, bios_info, perf))
 
 sys.exit (GlobalStatus)
 
