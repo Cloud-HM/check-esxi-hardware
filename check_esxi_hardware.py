@@ -19,7 +19,7 @@
 # Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA
 # 02110-1301, USA.
 #
-# Pre-req : pywbem
+# Pre-req : pywbem3
 #
 # Copyright (c) 2008 David Ligeret
 # Copyright (c) 2009 Joshua Daniel Franklin
@@ -48,187 +48,10 @@
 # This Nagios plugin is maintained here:
 #   http://www.claudiokuenzler.com/nagios-plugins/check_esxi_hardware.php
 #
-#@---------------------------------------------------
-#@ History
-#@---------------------------------------------------
-#@ Date   : 20080820
-#@ Author : David Ligeret
-#@ Reason : Initial release
-#@---------------------------------------------------
-#@ Date   : 20080821
-#@ Author : David Ligeret
-#@ Reason : Add verbose mode
-#@---------------------------------------------------
-#@ Date   : 20090219
-#@ Author : Joshua Daniel Franklin
-#@ Reason : Add try/except to catch AuthError and CIMError
-#@---------------------------------------------------
-#@ Date   : 20100202
-#@ Author : Branden Schneider
-#@ Reason : Added HP Support (HealthState)
-#@---------------------------------------------------
-#@ Date   : 20100512
-#@ Author : Claudio Kuenzler www.claudiokuenzler.com
-#@ Reason : Combined different versions (Joshua and Branden)
-#@ Reason : Added hardware type switch (dell or hp)
-#@---------------------------------------------------
-#@ Date   : 20100626/28
-#@ Author : Samir Ibradzic www.brastel.com
-#@ Reason : Added basic server info
-#@ Reason : Wanted to have server name, serial number & bios version at output
-#@ Reason : Set default return status to Unknown
-#@---------------------------------------------------
-#@ Date   : 20100702
-#@ Author : Aaron Rogers www.cloudmark.com
-#@ Reason : GlobalStatus was incorrectly getting (re)set to OK with every CIM element check
-#@---------------------------------------------------
-#@ Date   : 20100705
-#@ Author : Claudio Kuenzler www.claudiokuenzler.com
-#@ Reason : Due to change 20100702 all Dell servers would return UNKNOWN instead of OK...
-#@ Reason : ... so added Aaron's logic at the end of the Dell checks as well
-#@---------------------------------------------------
-#@ Date   : 20101028
-#@ Author : Claudio Kuenzler www.claudiokuenzler.com
-#@ Reason : Changed text in Usage and Example so people dont forget to use https://
-#@---------------------------------------------------
-#@ Date   : 20110110
-#@ Author : Ludovic Hutin (Idea and Coding) / Claudio Kuenzler (Bugfix)
-#@ Reason : If Dell Blade Servers are used, Serial Number of Chassis was returned
-#@---------------------------------------------------
-#@ Date   : 20110207
-#@ Author : Carsten Schoene carsten.schoene.cc
-#@ Reason : Bugfix for Intel systems (in this case Intel SE7520) - use 'intel' as system type
-#@---------------------------------------------------
-#@ Date   : 20110215
-#@ Author : Ludovic Hutin
-#@ Reason : Plugin now catches Socket Error (Timeout Error) and added a timeout parameter
-#@---------------------------------------------------
-#@ Date   : 20110217/18
-#@ Author : Ludovic Hutin / Tom Murphy
-#@ Reason : Bugfix in Socket Error if clause
-#@---------------------------------------------------
-#@ Date   : 20110221
-#@ Author : Claudio Kuenzler www.claudiokuenzler.com
-#@ Reason : Remove recently added Timeout due to incompabatility on Windows
-#@ Reason : and changed name of plugin to check_esxi_hardware
-#@---------------------------------------------------
-#@ Date   : 20110426
-#@ Author : Claudio Kuenzler www.claudiokuenzler.com
-#@ Reason : Added 'ibm' hardware type (compatible to Dell output). Tested by Keith Erekson.
-#@---------------------------------------------------
-#@ Date   : 20110426
-#@ Author : Phil Randal
-#@ Reason : URLise Dell model and tag numbers (as in check_openmanage)
-#@ Reason : Return performance data (as in check_openmanage, using similar names where possible)
-#@ Reason : Minor code tidyup - use elementName instead of instance['ElementName']
-#@---------------------------------------------------
-#@ Date   : 20110428
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : If hardware type is specified as 'auto' try to autodetect vendor
-#@ Reason : Return performance data for some HP models
-#@ Reason : Indent 'verbose' output to make it easier to read
-#@ Reason : Use OptionParser to give better parameter parsing (retaining compatability with original)
-#@---------------------------------------------------
-#@ Date   : 20110503
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Fix bug in HP Virtual Fan percentage output
-#@ Reason : Slight code reorganisation
-#@ Reason : Sort performance data
-#@ Reason : Fix formatting of current output
-#@---------------------------------------------------
-#@ Date   : 20110504
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Minor code changes and documentation improvements
-#@ Reason : Remove redundant mismatched ' character in performance data output
-#@ Reason : Output non-integral values for all sensors to fix problem seen with system board voltage sensors
-#@          on an IBM server (thanks to Attilio Drei for the sample output)
-#@---------------------------------------------------
-#@ Date   : 20110505
-#@ Author : Fredrik Aslund
-#@ Reason : Added possibility to use first line of a file as password (file:)
-#@---------------------------------------------------
-#@ Date   : 20110505
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Simplfy 'verboseoutput' to use 'verbose' as global variable instead of as parameter
-#@ Reason : Don't look at performance data from CIM_NumericSensor if we're not using it
-#@ Reason : Add --no-power, --no-volts, --no-current, --no-temp, and --no-fan options
-#@---------------------------------------------------
-#@ Date   : 20110506
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Reinstate timeouts with --timeout parameter (but not on Windows)
-#@ Reason : Allow file:passwordfile in old-style arguments too
-#@---------------------------------------------------
-#@ Date   : 20110507
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : On error, include numeric sensor value in output
-#@---------------------------------------------------
-#@ Date   : 20110520
-#@ Author : Bertrand Jomin
-#@ Reason : Plugin had problems to handle some S/N from IBM Blade Servers
-#@---------------------------------------------------
-#@ Date   : 20110614
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Rewrote file handling and file can now be used for user AND password
-#@---------------------------------------------------
-#@ Date   : 20111003
-#@ Author : Ian Chard (ian@chard.org)
-#@ Reason : Allow a list of unwanted elements to be specified, which is useful
-#@          in cases where hardware isn't well supported by ESXi
-#@---------------------------------------------------
-#@ Date   : 20120402
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Making plugin GPL compatible (Copyright) and preparing for OpenBSD port
-#@---------------------------------------------------
-#@ Date   : 20120405
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Fix lookup of warranty info for Dell
-#@---------------------------------------------------
-#@ Date   : 20120501
-#@ Author : Craig Hart
-#@ Reason : Bugfix in manufacturer discovery when cim entry not found or empty
-#@---------------------------------------------------
-#@ Date   : 20121027
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Added workaround for Dell PE x620 where "System Board 1 Riser Config Err 0: Connected"
-#@          element outputs wrong return code. Dell, please fix that.
-#@          Added web-link to VMware CIM API 5.x at top of script.
-#@---------------------------------------------------
-#@ Date   : 20130424
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Another workaround for Dell systems "System Board 1 LCD Cable Pres 0: Connected"
-#@---------------------------------------------------
-#@ Date   : 20130702
-#@ Author : Carl R. Friend
-#@ Reason : Improving wrong authentication timeout and exit UNKNOWN
-#@---------------------------------------------------
-#@ Date   : 20130725
-#@ Author : Phil Randal (phil.randal@gmail.com)
-#@ Reason : Fix lookup of warranty info for Dell
-#@---------------------------------------------------
-#@ Date   : 20140319
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Another two workarounds for Dell systems (VGA Cable Pres 0, Add-in Card 4 PEM Presence 0)
-#@---------------------------------------------------
-#@ Date   : 20150109
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Output serial number of chassis if a blade server is checked
-#@---------------------------------------------------
-#@ Date   : 20150119
-#@ Author : Andreas Gottwald
-#@ Reason : Fix NoneType element bug
-#@---------------------------------------------------
-#@ Date   : 20150626
-#@ Author : Claudio Kuenzler (www.claudiokuenzler.com)
-#@ Reason : Added support for patched pywbem 0.7.0 and new version 0.8.0, handle SSL error exception
-#@---------------------------------------------------
-#@ Date   : 20150710
-#@ Author : Stanislav German-Evtushenko
-#@ Reason : Exit Unknown instead of Critical for timeouts and auth errors
-#@---------------------------------------------------
 
 import sys
 import time
-import pywbem
+import pywbem3
 import re
 import string
 import pkg_resources
@@ -580,7 +403,7 @@ if os_platform != "win32":
 
 # connection to host
 verboseoutput("Connection to "+hosturl)
-wbemclient = pywbem.WBEMConnection(hosturl, (user,password), NS, no_verification=True)
+wbemclient = pywbem3.WBEMConnection(hosturl, (user,password), NS, no_verification=True)
 
 # Add a timeout for the script. When using with Nagios, the Nagios timeout cannot be < than plugin timeout.
 if on_windows == False and timeout > 0:
@@ -599,13 +422,13 @@ ExitMsg = ""
 if vendor=='auto':
   try:
     c=wbemclient.EnumerateInstances('CIM_Chassis')
-  except pywbem.cim_operations.CIMError as args:
+  except pywbem3.cim_operations.CIMError as args:
     if ( args[1].find('Socket error') >= 0 ):
       print("UNKNOWN: %s" %args)
       sys.exit (ExitUnknown)
     else:
       verboseoutput("Unknown CIM Error: %s" % args)
-  except pywbem.cim_http.AuthError as arg:
+  except pywbem3.cim_http.AuthError as arg:
     verboseoutput("Global exit set to UNKNOWN")
     GlobalStatus = ExitUnknown
     print("UNKNOWN: Authentication Error")
@@ -627,13 +450,13 @@ for classe in ClassesToCheck :
   verboseoutput("Check classe "+classe)
   try:
     instance_list = wbemclient.EnumerateInstances(classe)
-  except pywbem.cim_operations.CIMError as args:
+  except pywbem3.cim_operations.CIMError as args:
     if ( args[1].find('Socket error') >= 0 ):
       print("UNKNOWN: %s" %args)
       sys.exit (ExitUnknown)
     else:
       verboseoutput("Unknown CIM Error: %s" % args)
-  except pywbem.cim_http.AuthError as arg:
+  except pywbem3.cim_http.AuthError as arg:
     verboseoutput("Global exit set to UNKNOWN")
     GlobalStatus = ExitUnknown
     print("UNKNOWN: Authentication Error")

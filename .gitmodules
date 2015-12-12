@@ -1,0 +1,4 @@
+[submodule "pywbem3"]
+	path = pywbem3
+	url = https://github.com/cloud-hm/pywbem3.git
+	branch = master
